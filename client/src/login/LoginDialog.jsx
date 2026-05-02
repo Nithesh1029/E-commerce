@@ -74,28 +74,34 @@ const LoginDialog = ({ open, setOpen }) => {
     return passwordRegex.test(password);
   };
 
-  const signUpUser = async () => {
-    const response = await authenticateSignUp(signup);
+ const signUpUser = async () => {
 
-    if (!response) return;
-    if (!validatePassword(signup.password)){
-      alert("Weak password");
-      return;
-    }
-    if(!response.success){
-      toast.error(response.message);
-      return;
-    }
+  if (!validatePassword(signup.password)) {
 
-    // localStorage.setItem(
-    //   "token",
-    //   response.data.token
-    // );
+    toast.error(
+      "Password must contain uppercase, lowercase, number and special character"
+    );
 
-    setAccountCont(signup.firstname);
+    return;
+  }
 
-    handleClose();
-  };
+  const response = await authenticateSignUp(signup);
+
+  if (!response) return;
+
+  if (!response.success) {
+
+    toast.error(response.message);
+
+    return;
+  }
+
+  setAccountCont(signup.firstname);
+
+  toast.success(response.message);
+
+  handleClose();
+};
 
 const userLogin = async () => {
 
@@ -120,7 +126,7 @@ const userLogin = async () => {
   return (
     <Dialog open={open} onClose={handleClose} maxWidth={false}>
       <Component>
-        {/* LEFT SECTION */}
+        
         {account === "login" ? (
           <Image>
             <Typography variant="h5">Login</Typography>
@@ -139,7 +145,7 @@ const userLogin = async () => {
           </Image>
         )}
 
-        {/* RIGHT SECTION */}
+        
         {account === "login" ? (
           <FormWrapper>
             <TextField

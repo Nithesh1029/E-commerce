@@ -1,29 +1,34 @@
-import express from 'express';
-import cors from 'cors';
-import Connection from './DB/db.js';
-import 'dotenv/config';
-import Defaultdata from './default.js';
+import express from "express";
+import cors from "cors";
+import Connection from "./DB/db.js";
+import "dotenv/config";
+import Defaultdata from "./default.js";
+import cookieParser from "cookie-parser";
+import router from "./routes/route.js";
 
-import router from './routes/route.js';
+const app = express();
 
-
-const app=express();
 const PORT = process.env.PORT;
-app.use(cors());
+
+app.use(cookieParser());
+
+app.use(cors({
+    origin: "http://localhost:3000",
+    credentials: true
+}));
+
 app.use(express.json());
-app.get('/',(req,res)=>{
-    res.send('server Running');
+
+app.get("/", (req, res) => {
+    res.send("server Running");
 });
-app.use('/',router);
+
+app.use("/", router);
 
 Connection();
 
+// Defaultdata();
 
-
-//Defaultdata();
-
-app.listen(PORT,()=>{
-    console.log(`Connected on ${PORT}d`);
+app.listen(PORT, () => {
+    console.log(`Connected on ${PORT}`);
 });
-
-

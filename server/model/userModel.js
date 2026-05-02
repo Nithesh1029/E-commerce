@@ -13,7 +13,7 @@ const userModel=new mongoose.Schema({
         trim:true
     },
         email:{
-
+        lowercase:true,    
         type:String,
         required:true,
         trim:true,
@@ -23,7 +23,31 @@ const userModel=new mongoose.Schema({
         type:String,
         trim:true,
         required:true
-    },    
+    },   
+    isVerified:{
+        type:Boolean,       
+        default:false,
+
+    },
+    role:{
+        type:String,
+        enum:["admin","user"],
+        default:"user"
+
+    },
+    userOtp:{
+        type:String,
+        default:''
+    },
+    userOtpExpires:{
+        type:Number,
+        default:0
+    },
+    reSendOtp:{
+        type:String,
+        default:''
+    }
+
 
 });
 

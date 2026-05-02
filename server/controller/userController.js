@@ -1,6 +1,8 @@
 import User from "../model/userModel.js";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+
+
 export const signUpUser = async (req, res) => {
 
   try {
@@ -31,7 +33,7 @@ export const signUpUser = async (req, res) => {
 
     await newUser.save();
 
-    const token = new jwt.sign(
+    const token =  jwt.sign(
       {
         id:newUser._id,
         email:newUser.email
@@ -40,7 +42,12 @@ export const signUpUser = async (req, res) => {
       {
         expiresIn:'60min'
       }
-    )
+    );
+
+    res.cookie("token",token,{
+      httpOnly:true,
+      maxAge:60*60*1000
+    })
 
     return res.status(200).json({
       success: true,
@@ -77,7 +84,7 @@ export const login=async(req,res)=>{
 
 
 
-    const token = new jwt.sign({
+    const token =  jwt.sign({
       id:exists._id,
       email:exists.email
     },
@@ -88,6 +95,13 @@ export const login=async(req,res)=>{
   
   
   )
+
+
+  res.cookie("token",token,{
+    httpOnly:true,
+    secure:false,
+    maxAge:60*60*1000
+  });
 
 
 
@@ -104,4 +118,60 @@ export const login=async(req,res)=>{
   } catch (error) {
     return res.status(500).json({message:error.message});
   }
+}
+
+
+
+export const sendVerifyOtp=async(req,res)=>{
+  try {
+    const userId = req.user.userId;
+    const user =await User.findById(userId);
+    if(!user)return res.status(404).json({success:false,message:"user Not found"});
+    const isVerified=req.user.isVerified;
+    if(isVerified) return res.status(400).json({success:false,message:"user already verified"}); 
+    const otp=String(Math.floor(100000+Math.random()*900000));
+    user.userOtp=otp;
+    user.userOtpExpires=Date.now()+15*60*1000;
+    await user.save();
+
+    console.log(`Otp: ${otp}`);
+    return res.status(200).json({success:true,message:"Otp sent!"});
+  } catch (error) {
+    return res.status(500).json({success:false,message:error.message});
+  }
+}
+
+
+
+export const verifyOtp=async(req,res)=>{
+  try {
+    
+    const userId = req.user.userId;
+    const user=await User.findById(userId);
+    if(!user){
+      return res.status(404).json({success:false,message:"user Not found"});
+    }
+    const bodyOtp = req.body.otp;
+    if(!bodyOtp){
+      return res.status(400).json({success:false,message:"otp required"});
+    }
+    if(user.userOtp!==bodyOtp){
+      return res.status(400).json({success:false,message:"Invalid Otp"});
+    }
+    if(Date.now()>user.userOtpExpires){
+      return res.status(400).json({success:false,message:"Otp Expired"});
+    }
+    user.isVerified=true;
+    user.userOtp="";
+    user.userOtpExpires="";
+
+  
+    await user.save();
+  
+  
+    res.status(200).json({success:true,message:"opt verified successfully"});
+  } catch (error) {
+    return res.status(500).json({success:false,message:error.message});
+  }
+
 }
